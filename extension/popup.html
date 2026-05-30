@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 340px;
+    font-family: 'Courier New', monospace;
+    background: #0a0e1a;
+    color: #c8d8f0;
+    padding: 1rem;
+  }
+  .header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+  h1 { color: #00d4ff; font-size: 1rem; }
+  .subtitle { font-size: 0.7rem; color: #4a7a9b; }
+
+  .verdict {
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+  .verdict.phishing { background: #2a0000; border: 1px solid #ff4444; }
+  .verdict.legit    { background: #001a0d; border: 1px solid #00cc66; }
+  .verdict.scanning { background: #0d1f35; border: 1px solid #1e3a5f; }
+  .verdict.offline  { background: #1a1a0d; border: 1px solid #4a4a00; }
+
+  #verdict-icon  { font-size: 2rem; margin-bottom: 4px; }
+  #verdict-title { font-size: 1rem; font-weight: bold; }
+  .verdict.phishing #verdict-title { color: #ff4444; }
+  .verdict.legit    #verdict-title { color: #00cc66; }
+  .verdict.scanning #verdict-title { color: #4a7a9b; }
+  .verdict.offline  #verdict-title { color: #aaaa00; }
+  #verdict-conf { font-size: 0.75rem; color: #8aabcc; margin-top: 4px; }
+
+  .bar-wrap { background: #060c18; border-radius: 4px; height:6px; overflow:hidden; margin-top:8px; }
+  .bar-fill { height:100%; border-radius:4px; transition: width 0.5s ease; }
+  .phishing .bar-fill { background: #ff4444; }
+  .legit    .bar-fill { background: #00cc66; }
+
+  .section { margin-bottom: 0.75rem; }
+  .section-title {
+    font-size: 0.65rem; letter-spacing:0.1em;
+    color:#4a7a9b; text-transform:uppercase; margin-bottom:0.4rem;
+  }
+
+  .flag { font-size: 0.75rem; padding: 3px 0; border-bottom: 1px solid #0d1a2e; }
+  .flag:last-child { border-bottom: none; }
+  .flag.high { color: #ff6666; }
+  .flag.warn { color: #ffcc44; }
+  .no-flags  { color: #00cc66; font-size: 0.75rem; }
+
+  .vt-box { border-radius:6px; padding:8px; font-size:0.75rem; }
+  .vt-clean     { background:#001a0d; border:1px solid #00cc66; color:#00cc66; }
+  .vt-malicious { background:#2a0000; border:1px solid #ff4444; color:#ff4444; }
+  .vt-error     { background:#111827; border:1px solid #1e3a5f; color:#4a7a9b; }
+
+  .url-box {
+    background:#060c18; border:1px solid #1e3a5f;
+    border-radius:6px; padding:6px 8px;
+    font-size:0.7rem; color:#8aabcc;
+    word-break:break-all; margin-bottom:0.75rem;
+  }
+
+  .btn {
+    width:100%; padding:8px; border:none;
+    border-radius:6px; font-family:'Courier New',monospace;
+    font-size:0.8rem; cursor:pointer; margin-top:4px;
+  }
+  .btn-scan { background:#00d4ff; color:#000; font-weight:bold; }
+  .btn-open { background:#111827; color:#00d4ff; border:1px solid #1e3a5f; }
+  .btn:hover { opacity:0.85; }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>⬡ Phishing Detector</h1>
+    <div class="subtitle">ML + VirusTotal · 97.29% accuracy</div>
+  </div>
+</div>
+
+<div class="url-box" id="current-url">Loading current tab...</div>
+
+<div class="verdict scanning" id="verdict-box">
+  <div id="verdict-icon">⟳</div>
+  <div id="verdict-title">Scanning...</div>
+  <div id="verdict-conf"></div>
+  <div class="bar-wrap">
+    <div class="bar-fill" id="conf-bar" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="section" id="vt-section" style="display:none">
+  <div class="section-title">VirusTotal</div>
+  <div id="vt-box"></div>
+</div>
+
+<div class="section" id="flags-section" style="display:none">
+  <div class="section-title">Warning Signals</div>
+  <div id="flags-list"></div>
+</div>
+
+<button class="btn btn-scan" id="rescan-btn">↺ Rescan This Page</button>
+<button class="btn btn-open" id="dashboard-btn">Open Full Dashboard →</button>
+<script src="popup.js"></script>
+</body>
+</html>

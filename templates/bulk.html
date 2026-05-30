@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk URL Scanner — Phishing Detector</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Courier New',monospace;background:#0a0e1a;color:#c8d8f0;min-height:100vh;padding:2rem 1rem}
+  .page{max-width:900px;margin:0 auto}
+  h1{color:#00d4ff;font-size:1.6rem;margin-bottom:0.25rem}
+  .subtitle{color:#4a7a9b;font-size:0.85rem;margin-bottom:1.5rem}
+  a{color:#00d4ff;text-decoration:none;font-size:0.85rem}
+  a:hover{text-decoration:underline}
+
+  .card{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+  .section-title{font-size:0.75rem;letter-spacing:0.1em;color:#4a7a9b;text-transform:uppercase;margin-bottom:0.75rem}
+
+  textarea{
+    width:100%;background:#060c18;border:1px solid #1e3a5f;
+    color:#fff;font-family:'Courier New',monospace;font-size:13px;
+    padding:10px 14px;border-radius:8px;outline:none;
+    resize:vertical;min-height:160px;line-height:1.6
+  }
+  textarea:focus{border-color:#00d4ff}
+
+  .btn-row{display:flex;gap:8px;margin-top:0.75rem;flex-wrap:wrap}
+  .btn{border:none;border-radius:8px;padding:10px 20px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer;font-size:13px}
+  .btn-primary{background:#00d4ff;color:#000}
+  .btn-danger{background:#ff4444;color:#fff}
+  .btn-success{background:#00cc66;color:#000}
+  .btn-ghost{background:#111827;color:#00d4ff;border:1px solid #1e3a5f}
+  .btn:hover{opacity:0.85}
+  .btn:disabled{opacity:0.4;cursor:not-allowed}
+
+  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem}
+  .stat{background:#111827;border:1px solid #1e3a5f;border-radius:10px;padding:1rem;text-align:center}
+  .stat-num{font-size:1.5rem;font-weight:bold}
+  .stat-lbl{font-size:0.7rem;color:#4a7a9b;margin-top:2px}
+
+  .results-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+  .results-table th{color:#4a7a9b;font-weight:500;padding:8px 10px;text-align:left;border-bottom:1px solid #1e3a5f;font-size:0.75rem;letter-spacing:0.05em}
+  .results-table td{padding:8px 10px;border-bottom:1px solid #0d1a2e;vertical-align:middle}
+  .results-table tr:hover td{background:#0d1f35}
+  .results-table tr:last-child td{border-bottom:none}
+
+  .url-cell{max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8aabcc}
+  .tag{font-size:0.7rem;padding:3px 8px;border-radius:4px;font-weight:bold;white-space:nowrap}
+  .tag.phishing{background:#2a0000;color:#ff4444;border:1px solid #ff4444}
+  .tag.legit{background:#001a0d;color:#00cc66;border:1px solid #00cc66}
+  .tag.error{background:#1a1a00;color:#aaaa00;border:1px solid #aaaa00}
+
+  .conf-bar-wrap{width:80px;background:#060c18;border-radius:3px;height:5px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+  .conf-bar-fill{height:100%;border-radius:3px}
+
+  .loading{text-align:center;color:#4a7a9b;padding:2rem;display:none}
+  .spinner{display:inline-block;animation:spin 1s linear infinite;font-size:1.5rem}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+  .progress-wrap{background:#060c18;border-radius:4px;height:6px;overflow:hidden;margin-top:0.5rem;display:none}
+  .progress-fill{height:100%;background:#00d4ff;border-radius:4px;transition:width 0.3s ease;width:0%}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+    <div>
+      <h1>⬡ Bulk URL Scanner</h1>
+      <p class="subtitle">Scan up to 50 URLs at once — ML + rule-based detection</p>
+    </div>
+    <a href="/">← Back to Dashboard</a>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Paste URLs — one per line (max 50)</div>
+    <textarea id="url-input" placeholder="https://google.com
+http://secure-login-paypal-verify.xyz
+https://github.com
+http://hdfc-bank-alert.xyz/login
+https://stackoverflow.com"></textarea>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="scan-btn" onclick="scanAll()">▶ SCAN ALL</button>
+      <button class="btn btn-ghost" onclick="loadSample()">Load Sample URLs</button>
+      <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn btn-success" id="export-btn" onclick="exportCSV()" style="display:none">⬇ Export CSV</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner">⟳</div>
+    <div style="margin-top:0.5rem" id="loading-text">Scanning URLs...</div>
+  </div>
+
+  <div id="stats-section" style="display:none">
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="s-total" style="color:#00d4ff">0</div><div class="stat-lbl">Total Scanned</div></div>
+      <div class="stat"><div class="stat-num" id="s-phish" style="color:#ff4444">0</div><div class="stat-lbl">Phishing</div></div>
+      <div class="stat"><div class="stat-num" id="s-legit" style="color:#00cc66">0</div><div class="stat-lbl">Legitimate</div></div>
+      <div class="stat"><div class="stat-num" id="s-rate"  style="color:#ffbb00">0%</div><div class="stat-lbl">Phishing Rate</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="results-section" style="display:none">
+    <div class="section-title">Scan Results</div>
+    <div style="overflow-x:auto">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>URL</th>
+            <th>Verdict</th>
+            <th>Confidence</th>
+            <th>High Flags</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let scanResults = [];
+
+const SAMPLE_URLS = `https://google.com
+https://github.com/login
+https://stackoverflow.com
+https://linkedin.com
+http://secure-login-paypal-verify.xyz/account
+http://hdfc-bank-alert-update.xyz/confirm
+http://192.168.1.1/admin/login.php
+https://youtube.com
+http://g00gle-secure-update.ml/verify
+https://wikipedia.org`;
+
+function loadSample() {
+  document.getElementById("url-input").value = SAMPLE_URLS;
+}
+
+function clearAll() {
+  document.getElementById("url-input").value = "";
+  document.getElementById("results-section").style.display = "none";
+  document.getElementById("stats-section").style.display   = "none";
+  document.getElementById("export-btn").style.display      = "none";
+  scanResults = [];
+}
+
+async function scanAll() {
+  const raw  = document.getElementById("url-input").value.trim();
+  if (!raw) return;
+
+  const urls = raw.split("\n").map(u => u.trim()).filter(u => u.length > 0);
+  if (urls.length === 0) return;
+  if (urls.length > 50) { alert("Max 50 URLs at once."); return; }
+
+  const btn = document.getElementById("scan-btn");
+  btn.disabled = true;
+  btn.textContent = "Scanning...";
+  document.getElementById("loading").style.display       = "block";
+  document.getElementById("results-section").style.display = "none";
+  document.getElementById("stats-section").style.display   = "none";
+  document.getElementById("loading-text").textContent    = `Scanning ${urls.length} URLs...`;
+
+  // Animate progress
+  const prog = document.getElementById("progress-wrap");
+  const fill = document.getElementById("progress-fill");
+  prog.style.display = "block";
+  let w = 0;
+  const t = setInterval(() => {
+    w = Math.min(w + 2, 90);
+    fill.style.width = w + "%";
+  }, 100);
+
+  try {
+    const res  = await fetch("/bulk-scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls })
+    });
+    const data = await res.json();
+    if (data.error) { alert("Error: " + data.error); return; }
+
+    clearInterval(t);
+    fill.style.width = "100%";
+    setTimeout(() => { prog.style.display = "none"; }, 400);
+
+    scanResults = data.results;
+    displayResults(data);
+
+  } catch(e) {
+    alert("Connection error — is Flask running? " + e.message);
+  } finally {
+    clearInterval(t);
+    btn.disabled    = false;
+    btn.textContent = "▶ SCAN ALL";
+    document.getElementById("loading").style.display = "none";
+  }
+}
+
+function displayResults(data) {
+  // Stats
+  document.getElementById("stats-section").style.display = "block";
+  document.getElementById("s-total").textContent = data.total;
+  document.getElementById("s-phish").textContent = data.phishing_count;
+  document.getElementById("s-legit").textContent = data.legit_count;
+  const rate = data.total > 0 ? Math.round((data.phishing_count / data.total) * 100) : 0;
+  document.getElementById("s-rate").textContent  = rate + "%";
+
+  // Table
+  const tbody = document.getElementById("results-body");
+  tbody.innerHTML = "";
+  data.results.forEach((r, i) => {
+    const isPhish = r.prediction === 1;
+    const isError = r.prediction === -1;
+    const tagCls  = isError ? "error" : isPhish ? "phishing" : "legit";
+    const tagTxt  = r.verdict;
+    const barColor = isPhish ? "#ff4444" : "#00cc66";
+    const short   = r.url.length > 55 ? r.url.slice(0, 55) + "..." : r.url;
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:#4a7a9b">${i + 1}</td>
+        <td class="url-cell" title="${r.url}">${short}</td>
+        <td><span class="tag ${tagCls}">${tagTxt}</span></td>
+        <td>
+          ${r.confidence}%
+          <span class="conf-bar-wrap">
+            <span class="conf-bar-fill" style="width:${r.confidence}%;background:${barColor}"></span>
+          </span>
+        </td>
+        <td style="color:${r.high_flags > 0 ? '#ff4444' : '#00cc66'}">${r.high_flags} HIGH</td>
+      </tr>`;
+  });
+
+  document.getElementById("results-section").style.display = "block";
+  document.getElementById("export-btn").style.display      = "inline-block";
+}
+
+function exportCSV() {
+  if (!scanResults.length) return;
+  const headers = ["URL", "Verdict", "Confidence", "High Flags", "Warn Flags"];
+  const rows    = scanResults.map(r => [
+    `"${r.url}"`, r.verdict, r.confidence + "%", r.high_flags, r.warn_flags
+  ]);
+  const csv  = [headers, ...rows].map(r => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = "phishing_scan_results.csv";
+  a.click();
+}
+</script>
+</body>
+</html>

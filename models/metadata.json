@@ -1,0 +1,91 @@
+{
+  "model_name": "Random Forest",
+  "accuracy": 97.29,
+  "cv_mean": 96.9,
+  "cv_std": 1.48,
+  "total_samples": 11054,
+  "features": [
+    "UsingIP",
+    "LongURL",
+    "ShortURL",
+    "Symbol@",
+    "Redirecting//",
+    "PrefixSuffix-",
+    "SubDomains",
+    "HTTPS",
+    "DomainRegLen",
+    "Favicon",
+    "NonStdPort",
+    "HTTPSDomainURL",
+    "RequestURL",
+    "AnchorURL",
+    "LinksInScriptTags",
+    "ServerFormHandler",
+    "InfoEmail",
+    "AbnormalURL",
+    "WebsiteForwarding",
+    "StatusBarCust",
+    "DisableRightClick",
+    "UsingPopupWindow",
+    "IframeRedirection",
+    "AgeofDomain",
+    "DNSRecording",
+    "WebsiteTraffic",
+    "PageRank",
+    "GoogleIndex",
+    "LinksPointingToPage",
+    "StatsReport"
+  ],
+  "confusion_matrix": [
+    [
+      1216,
+      16
+    ],
+    [
+      44,
+      935
+    ]
+  ],
+  "top_features": [
+    [
+      "HTTPS",
+      0.3363
+    ],
+    [
+      "AnchorURL",
+      0.2417
+    ],
+    [
+      "WebsiteTraffic",
+      0.0721
+    ],
+    [
+      "SubDomains",
+      0.0638
+    ],
+    [
+      "PrefixSuffix-",
+      0.0413
+    ],
+    [
+      "LinksInScriptTags",
+      0.0401
+    ],
+    [
+      "ServerFormHandler",
+      0.0203
+    ],
+    [
+      "RequestURL",
+      0.0187
+    ],
+    [
+      "LinksPointingToPage",
+      0.0186
+    ],
+    [
+      "DomainRegLen",
+      0.0165
+    ]
+  ]
+}

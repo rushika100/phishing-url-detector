@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pkl
+*.pdf
+.env
+data/phishing.csv
+models/phishing_model.pkl
