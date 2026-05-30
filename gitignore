@@ -5,3 +5,4 @@ __pycache__/
 .env
 data/phishing.csv
 models/phishing_model.pkl
+.env
